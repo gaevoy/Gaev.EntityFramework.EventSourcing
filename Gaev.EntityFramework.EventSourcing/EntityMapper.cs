@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Gaev.EntityFramework.EventSourcing
 {
-    public class EventMapper : IEventMapper
+    public class EntityMapper : IEntityMapper
     {
         private readonly Dictionary<Type, Func<object, EntityState, object>> _mapping =
             new Dictionary<Type, Func<object, EntityState, object>>();
@@ -18,13 +18,13 @@ namespace Gaev.EntityFramework.EventSourcing
             throw new ApplicationException($"{entity.GetType().Name} is not mapped in {GetType().Name}");
         }
 
-        public EventMapper Map<TEntity>(Func<TEntity, EntityState, object> mapping)
+        public EntityMapper Map<TEntity>(Func<TEntity, EntityState, object> mapping)
         {
             _mapping[typeof(TEntity)] = (entity, state) => mapping((TEntity) entity, state);
             return this;
         }
 
-        public EventMapper Ignore<TEntity>()
+        public EntityMapper Ignore<TEntity>()
         {
             _mapping[typeof(TEntity)] = ReturnNull;
             return this;

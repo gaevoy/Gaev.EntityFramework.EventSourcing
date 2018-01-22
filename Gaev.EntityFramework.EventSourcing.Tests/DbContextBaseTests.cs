@@ -6,7 +6,7 @@ using NUnit.Framework;
 namespace Gaev.EntityFramework.EventSourcing.Tests
 {
     [TestFixture]
-    public class ChangeDataCaptureTests
+    public class DbContextBaseTests
     {
         private readonly TestConfig _config = new TestConfig();
 
@@ -14,8 +14,8 @@ namespace Gaev.EntityFramework.EventSourcing.Tests
         public void It_should_just_work()
         {
             // Given
-            var eventMapper = new EventMapper().Map<Company>(Mappings.Map).Map<Employee>(Mappings.Map);
-            var db = new TestDbContext(_config.ConnectionString, new ChangeDataCapture(eventMapper));
+            var eventMapper = new EntityMapper().Map<Company>(Mappings.Map).Map<Employee>(Mappings.Map);
+            var db = new TestDbContext(_config.ConnectionString, new ChangesBroadcaster(eventMapper));
             // db.EnsureCreated();
             var company = new Company
             {

@@ -7,8 +7,7 @@ namespace Gaev.EntityFramework.EventSourcing.Tests
 {
     public class TestDbContext : DbContextBase
     {
-        public TestDbContext(string connectionString, IChangeDataCapture wrapper) : base(ToOptions(connectionString),
-            wrapper)
+        public TestDbContext(string connectionString, IChangesBroadcaster broadcaster) : base(ToOptions(connectionString), broadcaster)
         {
         }
 
@@ -158,6 +157,6 @@ namespace Gaev.EntityFramework.EventSourcing.Tests
             }
         }
 
-        public static object Deserialize(EntityChange evt) => JsonConvert.DeserializeObject(evt.Payload, Type.GetType(evt.Type));
+        public static object Deserialize(EntityEvent evt) => JsonConvert.DeserializeObject(evt.Payload, Type.GetType(evt.Type));
     }
 }

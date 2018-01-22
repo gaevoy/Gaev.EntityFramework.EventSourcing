@@ -6,23 +6,23 @@ namespace Gaev.EntityFramework.EventSourcing
 {
     public abstract class DbContextBase : DbContext
     {
-        private readonly IChangeDataCapture _wrapper;
+        private readonly IChangesBroadcaster _broadcaster;
         
-        public DbSet<EntityChange> Events { get; set; }
+        public DbSet<EntityEvent> Events { get; set; }
 
-        protected DbContextBase(DbContextOptions options, IChangeDataCapture wrapper) : base(options)
+        protected DbContextBase(DbContextOptions options, IChangesBroadcaster broadcaster) : base(options)
         {
-            _wrapper = wrapper;
+            _broadcaster = broadcaster;
         }
 
         public override Task<int> SaveChangesAsync(bool acceptAllChanges, CancellationToken cancellation = new CancellationToken())
         {
-            return _wrapper.SaveChangesAsync(this, () => base.SaveChangesAsync(acceptAllChanges, cancellation));
+            return _broadcaster.WrapSaveAsync(this, () => base.SaveChangesAsync(acceptAllChanges, cancellation));
         }
 
         public override int SaveChanges(bool acceptAllChangesOnSuccess)
         {
-            return _wrapper.SaveChanges(this, () => base.SaveChanges(acceptAllChangesOnSuccess));
+            return _broadcaster.WrapSave(this, () => base.SaveChanges(acceptAllChangesOnSuccess));
         }
     }
 }

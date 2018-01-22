@@ -2,7 +2,7 @@
 
 namespace Gaev.EntityFramework.EventSourcing
 {
-    public interface IEventMapper
+    public interface IEntityMapper
     {
         object ToEvent(EntityState state, object entity);
     }
