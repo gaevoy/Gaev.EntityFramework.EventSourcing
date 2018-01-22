@@ -13,6 +13,7 @@ namespace Gaev.EntityFramework.EventSourcing.Tests
 
         public DbSet<Company> Companies { get; set; }
         public DbSet<Employee> Employees { get; set; }
+        public DbSet<Checkpoint> Checkpoints { get; set; }
     }
 
     #region Entities
@@ -30,6 +31,12 @@ namespace Gaev.EntityFramework.EventSourcing.Tests
         public string Name { get; set; }
         public int CompanyId { get; set; }
         public Company Company { get; set; }
+    }
+    
+    public class Checkpoint
+    {
+        public string Id { get; set; }
+        public long EventId { get; set; }
     }
 
     #endregion

@@ -13,6 +13,7 @@ namespace Gaev.EntityFramework.EventSourcing
 
         public object ToEvent(EntityState state, object entity)
         {
+            if (entity is EntityEvent) return null;
             if (_mapping.TryGetValue(entity.GetType(), out var mapping))
                 return mapping(entity, state);
             throw new ApplicationException($"{entity.GetType().Name} is not mapped in {GetType().Name}");
