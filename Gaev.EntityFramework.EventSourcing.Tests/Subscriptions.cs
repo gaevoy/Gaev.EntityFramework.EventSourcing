@@ -11,7 +11,7 @@ namespace Gaev.EntityFramework.EventSourcing.Tests
     {
         private static readonly Func<DbContextBase, long, int, AsyncEnumerable<EntityEvent>> GetEventsQuery
             = EF.CompileAsyncQuery((DbContextBase db, long checkpoint, int take)
-                => db.Events.OrderBy(e => e.Id).Where(e => e.Id > checkpoint).Take(take));
+                => db.Events.AsNoTracking().OrderBy(e => e.Id).Where(e => e.Id > checkpoint).Take(take));
 
         public static async Task CatchUp(Func<object, Task> handle, TestDbContext context,
             CancellationToken cancellation)

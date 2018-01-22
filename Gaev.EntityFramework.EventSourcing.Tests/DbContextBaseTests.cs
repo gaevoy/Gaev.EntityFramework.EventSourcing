@@ -58,18 +58,21 @@ namespace Gaev.EntityFramework.EventSourcing.Tests
                 handled.Add((CompanyCreated) evt);
                 return Task.CompletedTask;
             }, NewTestDbContext(), cancellation.Token);
-            var companies = Enumerable.Range(0, 10).Select(_ => new Company {Name = RandomString()}).ToList();
+            var companies = Enumerable.Range(0, 5).Select(_ => new Company {Name = RandomString()}).ToList();
+            var companies2 = Enumerable.Range(0, 5).Select(_ => new Company {Name = RandomString()}).ToList();
 
             // When
             db.Companies.AddRange(companies);
             await db.SaveChangesAsync();
-
+            await Task.Delay(200);
+            db.Companies.AddRange(companies2);
+            await db.SaveChangesAsync();
             await Task.Delay(200);
             cancellation.Cancel();
             await running;
 
             // Then
-            CollectionAssert.AreEquivalent(companies.Select(e => e.Name), handled.Select(e => e.Name));
+            CollectionAssert.AreEqual(companies.Union(companies2).Select(e => e.Name), handled.Select(e => e.Name));
         }
 
         private TestDbContext NewTestDbContext()
