@@ -7,21 +7,12 @@ namespace Gaev.EntityFramework.EventSourcing.Tests
 {
     public class TestDbContext : DbContextBase
     {
-        public TestDbContext(string connectionString, IChangesBroadcaster broadcaster) : base(ToOptions(connectionString), broadcaster)
+        public TestDbContext(string connectionString, IChangesBroadcaster broadcaster) : base(new DbContextOptionsBuilder().UseSqlServer(connectionString).Options, broadcaster)
         {
         }
 
         public DbSet<Company> Companies { get; set; }
         public DbSet<Employee> Employees { get; set; }
-
-        public void EnsureCreated()
-        {
-            Database.EnsureDeleted();
-            Database.EnsureCreated();
-        }
-  
-        private static DbContextOptions ToOptions(string connectionString) =>
-            new DbContextOptionsBuilder().UseSqlServer(connectionString).Options;
     }
 
     #region Entities

@@ -44,5 +44,11 @@ namespace Gaev.EntityFramework.EventSourcing.Tests
         }
 
         private string RandomString() => Guid.NewGuid().ToString();
+
+        private void EnsureCreated(DbContextBase context)
+        {
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+        }
     }
 }
