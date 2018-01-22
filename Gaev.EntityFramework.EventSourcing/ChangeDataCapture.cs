@@ -12,10 +12,10 @@ namespace Gaev.EntityFramework.EventSourcing
         private readonly IEventMapper _mapper;
         private readonly IEventStorage _storage;
 
-        public ChangeDataCapture(IEventMapper mapper, IEventStorage storage)
+        public ChangeDataCapture(IEventMapper mapper, IEventStorage storage = null)
         {
             _mapper = mapper;
-            _storage = storage;
+            _storage = storage ?? new DefaultEventStorage();
         }
 
         public async Task<int> SaveChangesAsync(DbContext context, Func<Task<int>> save)

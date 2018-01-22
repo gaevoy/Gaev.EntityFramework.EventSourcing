@@ -7,8 +7,10 @@ namespace Gaev.EntityFramework.EventSourcing
     public abstract class DbContextBase : DbContext
     {
         private readonly IChangeDataCapture _wrapper;
+        
+        public DbSet<EntityChange> Events { get; set; }
 
-        protected DbContextBase(DbContextOptions<DbContextBase> options, IChangeDataCapture wrapper) : base(options)
+        protected DbContextBase(DbContextOptions options, IChangeDataCapture wrapper) : base(options)
         {
             _wrapper = wrapper;
         }

@@ -30,11 +30,9 @@ namespace Gaev.EntityFramework.EventSourcing
 
         private static void AddEvents(DbContext context, IEnumerable<object> events)
         {
-            var now = DateTimeOffset.UtcNow;
-            var changes = events.OfType<EntityChange>().Select(evt => new EntityChange
+            var changes = events.Select(evt => new EntityChange
             {
-                Timestamp = now,
-                Type = evt.GetType().Name,
+                Type = evt.GetType().FullName,
                 Payload = JsonConvert.SerializeObject(evt, JsonSerializerSettings)
             });
             context.Set<EntityChange>().AddRange(changes);
