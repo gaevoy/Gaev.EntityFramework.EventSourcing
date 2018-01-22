@@ -16,7 +16,7 @@ namespace Gaev.EntityFramework.EventSourcing.Tests
             // Given
             var eventMapper = new EntityMapper().Map<Company>(Mappings.Map).Map<Employee>(Mappings.Map);
             var db = new TestDbContext(_config.ConnectionString, new ChangesBroadcaster(eventMapper));
-            // db.EnsureCreated();
+            // EnsureCreated(db);
             var company = new Company
             {
                 Name = RandomString(),

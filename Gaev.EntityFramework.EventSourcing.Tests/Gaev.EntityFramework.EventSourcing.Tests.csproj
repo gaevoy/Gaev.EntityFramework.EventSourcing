@@ -103,6 +103,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DbContextBaseExt.cs" />
     <Compile Include="Domain.cs" />
     <Compile Include="DbContextBaseTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

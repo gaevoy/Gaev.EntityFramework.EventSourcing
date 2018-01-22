@@ -26,22 +26,30 @@ namespace Gaev.EntityFramework.EventSourcing
 
         public async Task<int> WrapSaveAsync(DbContext context, Func<Task<int>> save)
         {
-            var changes = GetChanges(context);
-            var result = await save();
-            var events = ToEvents(changes);
-            AddEvents(context, events);
-            await save();
-            return result;
+            using (var transaction = await context.Database.BeginTransactionAsync())
+            {
+                var changes = GetChanges(context);
+                var result = await save();
+                var events = ToEvents(changes);
+                AddEvents(context, events);
+                await save();
+                transaction.Commit();
+                return result;
+            }
         }
 
         public int WrapSave(DbContext context, Func<int> save)
         {
-            var changes = GetChanges(context);
-            var result = save();
-            var events = ToEvents(changes);
-            AddEvents(context, events);
-            save();
-            return result;
+            using (var transaction = context.Database.BeginTransaction())
+            {
+                var changes = GetChanges(context);
+                var result = save();
+                var events = ToEvents(changes);
+                AddEvents(context, events);
+                save();
+                transaction.Commit();
+                return result;
+            }
         }
 
         private static List<Change> GetChanges(DbContext context)
