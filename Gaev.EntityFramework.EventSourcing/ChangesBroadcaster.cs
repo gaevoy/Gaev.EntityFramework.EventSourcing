@@ -17,6 +17,7 @@ namespace Gaev.EntityFramework.EventSourcing
             NullValueHandling = NullValueHandling.Ignore,
             TypeNameHandling = TypeNameHandling.None
         };
+
         private readonly IEntityMapper _mapper;
 
         public ChangesBroadcaster(IEntityMapper mapper)
@@ -26,28 +27,30 @@ namespace Gaev.EntityFramework.EventSourcing
 
         public async Task<int> WrapSaveAsync(DbContext context, Func<Task<int>> save)
         {
-            using (var transaction = await context.Database.BeginTransactionAsync())
+            var db = context.Database;
+            using (var transaction = db.CurrentTransaction == null ? await db.BeginTransactionAsync() : null)
             {
                 var changes = GetChanges(context);
                 var result = await save();
                 var events = ToEvents(changes);
                 AddEvents(context, events);
                 await save();
-                transaction.Commit();
+                transaction?.Commit();
                 return result;
             }
         }
 
         public int WrapSave(DbContext context, Func<int> save)
         {
-            using (var transaction = context.Database.BeginTransaction())
+            var db = context.Database;
+            using (var transaction = db.CurrentTransaction == null ? db.BeginTransaction() : null)
             {
                 var changes = GetChanges(context);
                 var result = save();
                 var events = ToEvents(changes);
                 AddEvents(context, events);
                 save();
-                transaction.Commit();
+                transaction?.Commit();
                 return result;
             }
         }

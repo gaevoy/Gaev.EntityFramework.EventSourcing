@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
 
 namespace Gaev.EntityFramework.EventSourcing.Tests
@@ -13,7 +14,7 @@ namespace Gaev.EntityFramework.EventSourcing.Tests
         private readonly TestConfig _config = new TestConfig();
 
         [Test]
-        public void It_should_just_work()
+        public void It_should_create_events()
         {
             // Given
             var db = NewTestDbContext();
@@ -45,6 +46,79 @@ namespace Gaev.EntityFramework.EventSourcing.Tests
         }
 
         [Test]
+        public void It_should_rollback_atomically()
+        {
+            // Given
+            var db = NewTestDbContext();
+            var companies = new[]
+            {
+                new Company {Name = RandomString()},
+                new Company {Name = RandomString()},
+                new Company {Name = null}
+            };
+
+            // When
+            db.Companies.AddRange(companies);
+            try
+            {
+                db.SaveChanges();
+            }
+            catch (DbUpdateException)
+            {
+            }
+
+            // Then
+            var events = db.Events
+                .OrderByDescending(e => e.Id)
+                .Take(companies.Length)
+                .Select(Mappings.Deserialize)
+                .OfType<CompanyCreated>()
+                .ToList();
+            CollectionAssert.IsEmpty(events.Where(e => e.Name == companies[0].Name));
+            CollectionAssert.IsEmpty(events.Where(e => e.Name == companies[1].Name));
+        }
+
+        [Test]
+        public void It_should_rollback_atomically_whole_transaction()
+        {
+            // Given
+            var db = NewTestDbContext();
+            var companies = new[]
+            {
+                new Company {Name = RandomString()},
+                new Company {Name = RandomString()}
+            };
+
+            // When
+            try
+            {
+                using (var tran = db.Database.BeginTransaction())
+                {
+                    db.Companies.AddRange(companies);
+                    db.SaveChanges();
+
+                    db.Companies.Add(new Company {Name = null});
+                    db.SaveChanges();
+
+                    tran.Commit();
+                }
+            }
+            catch (DbUpdateException)
+            {
+            }
+
+            // Then
+            var events = db.Events
+                .OrderByDescending(e => e.Id)
+                .Take(companies.Length)
+                .Select(Mappings.Deserialize)
+                .OfType<CompanyCreated>()
+                .ToList();
+            CollectionAssert.IsEmpty(events.Where(e => e.Name == companies[0].Name));
+            CollectionAssert.IsEmpty(events.Where(e => e.Name == companies[1].Name));
+        }
+
+        [Test, Parallelizable(ParallelScope.None)]
         public async Task It_should_catch_up()
         {
             // Given
@@ -55,7 +129,7 @@ namespace Gaev.EntityFramework.EventSourcing.Tests
             var cancellation = new CancellationTokenSource();
             var running = Subscriptions.CatchUp(evt =>
             {
-                handled.Add((CompanyCreated) evt);
+                lock (handled) handled.Add((CompanyCreated) evt);
                 return Task.CompletedTask;
             }, NewTestDbContext(), cancellation.Token);
             var companies = Enumerable.Range(0, 5).Select(_ => new Company {Name = RandomString()}).ToList();
@@ -67,12 +141,20 @@ namespace Gaev.EntityFramework.EventSourcing.Tests
             await Task.Delay(200);
             db.Companies.AddRange(companies2);
             await db.SaveChangesAsync();
-            await Task.Delay(200);
+            while (true)
+            {
+                lock (handled)
+                    if (handled.Count >= 10)
+                        break;
+                await Task.Delay(50);
+            }
+
             cancellation.Cancel();
             await running;
 
             // Then
-            CollectionAssert.AreEqual(companies.Union(companies2).Select(e => e.Name), handled.Select(e => e.Name));
+            var expected = string.Join("|", companies.Union(companies2).Select(e => e.Name));
+            Assert.AreEqual(expected, string.Join("|", handled.Select(e => e.Name)));
         }
 
         private TestDbContext NewTestDbContext()

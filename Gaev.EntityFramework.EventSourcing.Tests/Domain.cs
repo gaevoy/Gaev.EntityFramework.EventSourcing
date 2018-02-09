@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 
@@ -21,6 +22,7 @@ namespace Gaev.EntityFramework.EventSourcing.Tests
     public class Company
     {
         public int Id { get; set; }
+        [Required]
         public string Name { get; set; }
         public List<Employee> Staff { get; set; }
     }
